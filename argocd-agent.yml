@@ -1,0 +1,54 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  labels:
+    app: argocd-agent
+    app.kubernetes.io/component: argocd-agent
+    app.kubernetes.io/instance: argocd-agent
+  name: argocd-agent
+  namespace: openmaru-apm
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    deploymentconfig: argocd-agent
+  strategy:
+    type: Rolling
+  template:
+    metadata:
+      labels:
+        deploymentconfig: argocd-agent
+    spec:
+      containers:
+      - env:
+        - name: OMAPM_HOST
+          value: 100.100.60.20
+        - name: OMAPM_PORT
+          value: "80"
+        image: image-registry.openshift-image-registry.svc:5000/openshift/jbossweb53-tomcat9-openmaruapm:5.1.0-6.8
+        imagePullPolicy: IfNotPresent
+        name: argocd-agent
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        - containerPort: 8443
+          protocol: TCP
+        - containerPort: 8778
+          protocol: TCP
+        resources:
+          limits:
+            cpu: "1"
+            memory: 2000Mi
+          requests:
+            cpu: "1"
+            memory: 2000Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+  test: false
+  triggers:
+  - type: ConfigChange
